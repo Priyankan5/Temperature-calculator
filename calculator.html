@@ -8,24 +8,29 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
-            background-color: light pink;
+            background-color: #85b8eb;
+            background-image: url('numbers2.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
             text-align: center;
         }
 
         h1 {
-            color: purple;
+           
+            color: rgb(27, 5, 135);
         }
 
         label {
             display: block;
             margin: 10px 0 5px;
-            color: #555;
+            color: #6b0808;
         }
 
         input {
             padding: 8px;
             width: 200px;
-            border: 1px solid #ccc;
+            border: 1px solid #710505;
             border-radius: 4px;
             margin-bottom: 15px;
         }
@@ -33,7 +38,7 @@
         button {
             padding: 10px 20px;
             cursor: pointer;
-            background-color: #4CAF50;
+            background-color: #0b630e;
             color: white;
             border: none;
             border-radius: 4px;
@@ -58,7 +63,7 @@
         }
     </style>
 </head>
-<body>
+<body><br><br><br><br>
     <h1>Temperature Calculation</h1>
     
     <label for="T_H_IN">T_H_IN:</label>
@@ -88,49 +93,56 @@
             const m_dot_H = parseFloat(document.getElementById('m_dot_H').value);
             const m_dot_C = parseFloat(document.getElementById('m_dot_C').value);
             const UA = parseFloat(document.getElementById('UA').value);
-
-            if (isNaN(T_H_IN) || isNaN(T_C_IN) || isNaN(m_dot_H) || isNaN(m_dot_C) || isNaN(UA)) {
-                alert("Please enter valid numerical values for all inputs.");
+    
+            // Check for negative values
+            if (T_H_IN < 0 || T_C_IN < 0 || m_dot_H < 0 || m_dot_C < 0 || UA < 0) {
+                alert("Please enter non-negative values for all inputs.");
                 return;
             }
-
-                   // Initial guesses for T_H_OUT and T_C_OUT
-            let T_H_OUT = T_H_IN - 10; // Initial guess for T_H_OUT
-            let T_C_OUT = T_C_IN + 10; // Initial guess for T_C_OUT
-
+    
+            // Set a threshold to prevent temperatures from going too low
+            const temperatureThreshold = 1;
+    
+            // Initial guesses for T_H_OUT and T_C_OUT
+            let T_H_OUT = T_H_IN - 10;
+            let T_C_OUT = T_C_IN + 10;
+    
             // Iterative solution for T_H_OUT and T_C_OUT
             for (let i = 0; i < 100; i++) {
-                const T_D_1 = T_H_IN - T_C_OUT;
-                const T_D_2 = T_H_OUT - T_C_IN;
-
-                const LMTD = (T_D_1 - T_D_2) / Math.log(T_D_1 / T_D_2);
-
-                const Q_LMTD = UA * LMTD;
-
                 const DeltaT_H = T_H_IN - T_H_OUT;
                 const DeltaT_C = T_C_OUT - T_C_IN;
-
+    
                 const Q_H = m_dot_H * 2 * DeltaT_H;
                 const Q_C = m_dot_C * DeltaT_C;
-
+    
+                const Q_LMTD = Math.min(Q_H, Q_C); // Use the smaller value for Q_LMTD
+    
+                const LMTD = Q_LMTD / UA;
+    
+                // Ensure non-negative values and apply the threshold
+                T_H_OUT = Math.max(T_H_IN - Q_LMTD / (m_dot_H * 2 / LMTD), temperatureThreshold);
+                T_C_OUT = Math.max(T_C_IN + Q_LMTD / (m_dot_C / LMTD), temperatureThreshold);
+    
                 // Check for convergence (adjust the tolerance as needed)
                 if (Math.abs(Q_H - Q_LMTD) < 0.01 && Math.abs(Q_C - Q_LMTD) < 0.01) {
                     break;
                 }
-
-                // Update T_H_OUT and T_C_OUT
-                T_H_OUT = (90 - 0.75 * UA * (T_C_OUT - 40)) / 1.5;
-                T_C_OUT = (225 - 0.5 * UA * (T_C_OUT - 40)) / 2;
             }
-
+    
             // Display the results
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = `
                 <p>Calculation Results:</p>
-                <p><strong>T_H_OUT:</strong> ${T_H_OUT}</p>
-                <p><strong>T_C_OUT:</strong> ${T_C_OUT}</p>
+                <p><strong>T_H_OUT:</strong> ${T_H_OUT.toFixed(2)}</p>
+                <p><strong>T_C_OUT:</strong> ${T_C_OUT.toFixed(2)}</p>
             `;
         }
     </script>
+    
+    
+    
+    
+    
+
 </body>
 </html>
